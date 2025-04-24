@@ -94,20 +94,26 @@ class EmployerController extends Controller
         ]);
 
         $application = Application::findOrFail($applicationId);
-
         $application->status = $request->status;
         $application->save();
 
-        $studentProfile = $application->studentProfile;
+        if ($application->studentProfile) {
+            $studentProfile = $application->studentProfile;
+            $studentProfile->status = $request->status;
+            $studentProfile->save();
 
-        $studentProfile->status = $request->status;
-        $studentProfile->save();
-
-        $student = $studentProfile->user;
-        $student->notify(new ApplicationStatusNotification($request->status, $application->internship->title));
+            if ($studentProfile->user) {
+                $student = $studentProfile->user;
+                $student->notify(new ApplicationStatusNotification(
+                    $request->status,
+                    optional($application->internship)->title ?? 'the internship'
+                ));
+            }
+        }
 
         return redirect()->back()->with('success', 'Status updated and student notified.');
     }
+
 
 
     public function notification()

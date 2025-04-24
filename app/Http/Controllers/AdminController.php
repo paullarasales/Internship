@@ -31,7 +31,7 @@ class AdminController extends Controller
     public function studentList()
     {
         $verifications = Verification::with('user')->get();
-        dd($verifications);
+        // dd($verifications);
 
         return Inertia::render('Admin/Verification', [
             'verifications' => $verifications,
