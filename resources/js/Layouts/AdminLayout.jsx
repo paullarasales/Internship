@@ -42,6 +42,13 @@ export default function EmployerLayout({ header, children }) {
                     >
                         <h1 className="text-lg font-medium">Students</h1>
                     </NavLink>
+
+                    <NavLink
+                        href={route("admin.companies")}
+                        active={route().current("admin.companies")}
+                    >
+                        <h1 className="text-lg font-medium">Companies</h1>
+                    </NavLink>
                     <NavLink
                         href={route("admin.notification")}
                         active={route().current("admin.notification")}

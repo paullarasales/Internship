@@ -27,6 +27,9 @@ class AdminController extends Controller
         $employerCount = User::where('role', 'employer')->count();
         $previousEmployerCount = User::where('role', 'employer')->whereMonth('created_at', now()->subMonth()->month)->count();
 
+        $company = EmployerProfile::take(5)->get();
+        // dd($company);
+
         $applicationTrends = Application::select(DB::raw('Month(created_at) as month'),
             DB::raw('YEAR(created_at) as year'),
             'status',
@@ -51,6 +54,7 @@ class AdminController extends Controller
                 'change' => $this->calculateChange($employerCount, $previousEmployerCount),
             ],
             'applicationTrends' => $applicationTrends,
+            'company' => $company,
         ]);
     }
 
@@ -94,6 +98,13 @@ class AdminController extends Controller
         ]);
     }
 
+    public function companies()
+    {
+        $companies = EmployerProfile::all();
+        return Inertia::render('Admin/Company', [
+            'companies' => $companies
+        ]);
+    }
 
     public function studentList()
     {

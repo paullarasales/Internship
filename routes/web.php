@@ -45,7 +45,7 @@ Route::middleware(['auth', 'admin'])->group(function () {
     Route::get('/admin/verification', [AdminController::class, 'studentList'])->name('admin.verification');
     Route::get('/admin/monitor/student', [AdminController::class, 'monitorStudent'])->name('admin.monitor');
     Route::get('/admin/verification/{id}', [AdminController::class, 'showVerificationDetails'])->name('admin.verificationDetails');
-
+    Route::get('/companies', [AdminController::class, 'companies'])->name('admin.companies');
     Route::post
     ('/admin/verification/{id}/status', [AdminController::class, 'updateVerificationStatus'])->name('admin.updateVerificationStatus');
     Route::get('/admin/notifications', [AdminController::class, 'notification'])->name('admin.notification');
