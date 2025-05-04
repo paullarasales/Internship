@@ -9,6 +9,7 @@ use App\Models\EmployerProfile;
 use Illuminate\Http\Request;
 use App\Models\Application;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Notifications\VerificationStatusNotification;
 use Inertia\Inertia;
 
@@ -21,10 +22,20 @@ class AdminController extends Controller
         $previousStudent = User::where('role', 'student')->whereMonth('created_at', now()->subMonth()->month)->count();
 
         $currentInternshipCount = Internship::count();
-        $previousInternshipCount = Internship::count()->whereMonth('created_at', now()->subMonth()->month)->count();
+        $previousInternshipCount = Internship::whereMonth('created_at', now()->subMonth()->month)->count();
 
         $employerCount = User::where('role', 'employer')->count();
         $previousEmployerCount = User::where('role', 'employer')->whereMonth('created_at', now()->subMonth()->month)->count();
+
+        $applicationTrends = Application::select(DB::raw('Month(created_at) as month'),
+            DB::raw('YEAR(created_at) as year'),
+            'status',
+            DB::raw('count(*) as total'))->whereYear('created_at', now()->year)
+            ->groupBy('year', 'month', 'status')
+            ->orderBy('month')
+            ->get()
+            ->groupBy('status');
+
 
         return Inertia::render('Admin/Dashboard', [
             'studentStats' => [
@@ -36,8 +47,10 @@ class AdminController extends Controller
                 'change' => $this->calculateChange($currentInternshipCount, $previousInternshipCount),
             ],
             'employerStats' => [
-
-            ]
+                'count' => $employerCount,
+                'change' => $this->calculateChange($employerCount, $previousEmployerCount),
+            ],
+            'applicationTrends' => $applicationTrends,
         ]);
     }
 
