@@ -3,7 +3,7 @@ import { useForm } from "@inertiajs/react";
 import { useState } from "react";
 
 export default function RequirementForm({ auth, requirements }) {
-    const { data, setData, post, progress, errors } = useForm({
+    const { data, setData, post, progress, errors, reset } = useForm({
         resume: null,
         endorsement_letter: null,
         good_moral: null,
@@ -11,6 +11,8 @@ export default function RequirementForm({ auth, requirements }) {
         moa: null,
         clearance: null,
     });
+
+    const [showSuccessModal, setShowSuccessModal] = useState(false);
 
     const handleChange = (e) => {
         setData(e.target.name, e.target.files[0]);
@@ -20,6 +22,10 @@ export default function RequirementForm({ auth, requirements }) {
         e.preventDefault();
         post(route("student.requirements.store"), {
             preserveScroll: true,
+            onSuccess: () => {
+                setShowSuccessModal(true);
+                reset();
+            },
         });
     };
 
@@ -85,6 +91,25 @@ export default function RequirementForm({ auth, requirements }) {
                     )}
                 </form>
             </div>
+
+            {showSuccessModal && (
+                <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50 z-50">
+                    <div className="bg-white p-8 rounded-lg shadow-lg text-center">
+                        <h3 className="text-xl font-semibold mb-4 text-green-600">
+                            Submission Successful!
+                        </h3>
+                        <p className="text-gray-700 mb-6">
+                            Your requirements have been successfully submitted.
+                        </p>
+                        <button
+                            className="bg-green-500 hover:bg-green-600 text-white px-6 py-2 rounded"
+                            onClick={() => setShowSuccessModal(false)}
+                        >
+                            OK
+                        </button>
+                    </div>
+                </div>
+            )}
         </AuthenticatedLayout>
     );
 }

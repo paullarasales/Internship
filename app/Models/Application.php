@@ -9,6 +9,7 @@ class Application extends Model
     protected $fillable = [
         'student_id',
         'internship_id',
+        'employer_id',
         'status',
         'applied_at',
     ];
@@ -21,6 +22,11 @@ class Application extends Model
     public function internship()
     {
         return $this->belongsTo(Internship::class);
+    }
+
+    public function employer()
+    {
+        return $this->belongsTo(User::class, 'employer_id');
     }
 
     public function studentProfile()

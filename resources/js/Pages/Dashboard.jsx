@@ -6,6 +6,7 @@ export default function Dashboard({
     internships,
     isApproved,
     existingApplication,
+    studentProfile, // <- added
 }) {
     const [selectedInternship, setSelectedInternship] = useState(null);
     const [loading, setLoading] = useState(true);
@@ -60,62 +61,119 @@ export default function Dashboard({
     return (
         <AuthenticatedLayout>
             <Head title="Student Dashboard" />
-            <main className="max-w-3xl mx-auto p-6 space-y-6">
-                <h1 className="text-3xl font-bold text-gray-800 mb-4">
-                    Internship Feed
-                </h1>
+            <main className="max-w-7xl mx-auto p-6 grid grid-cols-1 md:grid-cols-3 gap-6">
+                <aside className="bg-white border rounded-xl shadow-sm overflow-hidden">
+                    <div className="h-32 bg-gradient-to-r from-indigo-500 to-purple-500 relative">
+                        {studentProfile?.profile_picture && (
+                            <img
+                                src={`/profiles/${studentProfile.profile_picture}`}
+                                alt="Profile"
+                                className="w-24 h-24 object-cover rounded-full border-4 border-white absolute -bottom-12 left-6"
+                            />
+                        )}
+                    </div>
 
-                {internships.length === 0 ? (
-                    <p className="text-gray-600 text-center">
-                        No internships available right now. Please check back
-                        later.
-                    </p>
-                ) : (
-                    internships.map((internship) => (
-                        <section
-                            key={internship.id}
-                            className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300 space-y-3"
-                        >
-                            {/* Company + Title */}
-                            <div className="flex items-center gap-4">
-                                <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg font-bold">
-                                    {internship.company_name?.[0] || "?"}
-                                </div>
-                                <div>
+                    <div className="pt-16 px-6 pb-6 space-y-4">
+                        {studentProfile ? (
+                            <>
+                                <div className="space-y-1">
                                     <h2 className="text-lg font-semibold text-gray-900">
-                                        {internship.title}
+                                        {studentProfile.first_name}{" "}
+                                        {studentProfile.last_name}
                                     </h2>
                                     <p className="text-sm text-gray-500">
-                                        {internship.company_name ||
-                                            "Unknown Company"}
+                                        {studentProfile.year_level} Year
+                                    </p>
+                                    <p className="text-sm text-gray-500">
+                                        School ID: {studentProfile.school_id}
                                     </p>
                                 </div>
-                            </div>
 
-                            {/* Short Description */}
-                            <p className="text-sm text-gray-700">
-                                {internship.description?.slice(0, 160) ||
-                                    "No description provided."}
-                                {internship.description?.length > 160 && "..."}
-                            </p>
+                                <div>
+                                    <h3 className="text-md font-semibold mb-2">
+                                        Skills
+                                    </h3>
+                                    <p className="text-gray-700 text-sm">
+                                        {studentProfile.skills ||
+                                            "No skills listed."}
+                                    </p>
+                                </div>
 
-                            {/* Action Buttons */}
-                            <div className="flex justify-end gap-3">
-                                <button
-                                    onClick={() =>
-                                        setSelectedInternship(internship)
-                                    }
-                                    className="text-sm text-indigo-600 font-medium hover:underline"
-                                >
-                                    View Details
-                                </button>
-                            </div>
-                        </section>
-                    ))
-                )}
+                                <div>
+                                    <h3 className="text-md font-semibold mb-2">
+                                        Bio
+                                    </h3>
+                                    <p className="text-gray-700 text-sm">
+                                        {studentProfile.bio ||
+                                            "No bio provided."}
+                                    </p>
+                                </div>
+                            </>
+                        ) : (
+                            <p className="text-gray-500">No profile found.</p>
+                        )}
+                    </div>
+                </aside>
+
+                <section className="md:col-span-2 space-y-6">
+                    {internships.length === 0 ? (
+                        <p className="text-gray-600 text-center">
+                            No internships available right now. Please check
+                            back later.
+                        </p>
+                    ) : (
+                        internships.map((internship) => (
+                            <section
+                                key={internship.id}
+                                className="bg-white border rounded-xl p-6 shadow-sm hover:shadow-md transition duration-300 space-y-3"
+                            >
+                                <div className="flex items-center gap-4">
+                                    {internship.profile_picture ? (
+                                        <img
+                                            src={`/${internship.profile_picture}`}
+                                            alt="Profile"
+                                            className="w-12 h-12 rounded-full object-cover border"
+                                        />
+                                    ) : (
+                                        <div className="w-12 h-12 bg-gray-200 rounded-full flex items-center justify-center text-gray-500 text-lg font-bold">
+                                            {internship.company_name?.[0] ||
+                                                "?"}
+                                        </div>
+                                    )}
+                                    <div>
+                                        <h2 className="text-lg font-semibold text-gray-900">
+                                            {internship.title}
+                                        </h2>
+                                        <p className="text-sm text-gray-500">
+                                            {internship.company_name ||
+                                                "Unknown Company"}
+                                        </p>
+                                    </div>
+                                </div>
+
+                                <p className="text-sm text-gray-700">
+                                    {internship.description?.slice(0, 160) ||
+                                        "No description provided."}
+                                    {internship.description?.length > 160 &&
+                                        "..."}
+                                </p>
+
+                                <div className="flex justify-end gap-3">
+                                    <button
+                                        onClick={() =>
+                                            setSelectedInternship(internship)
+                                        }
+                                        className="text-sm text-indigo-600 font-medium hover:underline"
+                                    >
+                                        View Details
+                                    </button>
+                                </div>
+                            </section>
+                        ))
+                    )}
+                </section>
             </main>
 
-            {/* Modal for Detailed View */}
             {selectedInternship && (
                 <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50 px-4">
                     <div className="bg-white max-w-4xl w-full rounded-lg shadow-xl overflow-y-auto max-h-[90vh] p-6 relative">
@@ -125,6 +183,7 @@ export default function Dashboard({
                         >
                             &times;
                         </button>
+
                         <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
                             <div>
                                 <h2 className="text-2xl font-bold mb-4 text-indigo-700">
@@ -137,6 +196,7 @@ export default function Dashboard({
                                     {selectedInternship.description ||
                                         "No description available."}
                                 </p>
+
                                 {selectedInternship.requirements && (
                                     <div className="mt-4">
                                         <h3 className="font-semibold text-lg">

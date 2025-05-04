@@ -28,12 +28,14 @@ class ApplicationController extends Controller
             return back()->withErrors(['message' => 'You have already applied for this internship.']);
         }
 
+        $internship = Internship::find($request->internship_id);
+
         $application = Application::create([
             'student_id' => $user->id,
             'internship_id' => $request->internship_id,
+            'employer_id' => $internship->employer_id,
         ]);
 
-        $internship = Internship::find($request->internship_id);
         $employer = User::find($internship->employer_id);
 
         if ($employer) {

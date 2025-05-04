@@ -18,7 +18,7 @@ return new class extends Migration
             $table->enum('status', ['pending', 'accepted', 'rejected'])->default('pending');
             $table->timestamp('applied_at')->useCurrent();
             $table->timestamps();
-        });
+        });  
     }
 
     /**

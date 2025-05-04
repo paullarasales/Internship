@@ -4,11 +4,13 @@ namespace App\Http\Controllers;
 
 use App\Notifications\ApplicationStatusNotification;
 use App\Models\InternshipRequirement;
+use App\Models\Internship;
 use App\Models\User;
 use App\Models\EmployerProfile;
 use App\Models\Application;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Auth;
+use Illuminate\Support\Facades\DB;
 use App\Models\StudentProfile;
 use Inertia\Inertia;
 
@@ -16,57 +18,121 @@ class EmployerController extends Controller
 {
     public function dashboard()
     {
-        return Inertia::render('Employer/Dashboard');
-    }
+        $currentApplications = Application::count();
+        $previousApplications = Application::whereMonth('created_at', now()->subMonth()->month)->count();
 
-    public function showProfile()
-    {
-        $profile = EmployerProfile::where('user_id', auth()->id())->first();
+        $currentInternships = Internship::count();
+        $previousInternships = Internship::whereMonth('created_at', now()->subMonth()->month)->count();
 
-        return Inertia::render('Employer/Profile', [
-            'profile' => $profile
+        $currentInterns = Application::where('status', 'accepted')->count();
+        $previousInterns = Application::where('status', 'accepted')->whereMonth('created_at', now()->subMonth()->month)->count();
+
+        $notifications = auth()->user()->notifications()->latest()->take(5)->get();
+        $companyProfile = auth()->user()->employerProfile;
+
+        return Inertia::render('Employer/Dashboard', [
+            'applicationStats' => [
+                'count' => $currentApplications,
+                'change' => $this->calculateChange($currentApplications, $previousApplications),
+            ],
+            'internshipStats' => [
+                'count' => $currentInternships,
+                'change' => $this->calculateChange($currentInternships, $previousInternships),
+            ],
+            'internStats' => [
+                'count' => $currentInterns,
+                'change' => $this->calculateChange($currentInterns, $previousInterns),
+            ],
+            'notifications' => $notifications,
+            'companyProfile' => $companyProfile,
         ]);
     }
 
-    public function editProfile()
+    private function calculateChange($current, $previous)
     {
-        $profile = EmployerProfile::where('user_id', auth()->id())->first();
-
-        return Inertia::render('Employer/EditProfile', [
-            'profile' => $profile
-        ]);
-    }
-
-    public function updateProfile(Request $request)
-    {
-        $request->validate([
-            'company_name' => 'required|string|max:255',
-            'contact_name' => 'required|string|max:255',
-            'contact_number' => 'required|string|max:15',
-            'company_email' => 'required',
-            'company_address' => 'required|string|max:255',
-            'description' => 'nullable|string',
-            'website' => 'nullable|url',
-        ]);
-
-        $profile = EmployerProfile::where('user_id', auth()->id())->first();
-
-        if ($profile) {
-            $profile->update($request->all());
-        } else {
-            EmployerProfile::create([
-                'user_id' => auth()->id(),
-                'company_name' => $request->input('company_name'),
-                'contact_name' => $request->input('contact_name'),
-                'contact_number' => $request->input('contact_number'),
-                'company_email' => $request->input('company_email'),
-                'company_address' => $request->input('company_address'),
-                'description' => $request->input('description'),
-                'website' => $request->input('website'),
-            ]);
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
         }
 
-        return redirect()->route('employer.profile.show')->with('success', 'Profile updated successfully.');
+        return round((($current - $previous) / $previous) * 100);
+    }
+
+
+    public function employerProfile()
+    {
+        $profiles = EmployerProfile::where('user_id', Auth::id())->get();
+
+        return Inertia::render('Employer/Index', [
+            'profiles' => $profiles,
+        ]);
+    }
+
+    public function create()
+    {
+        return Inertia::render('Employer/Create');
+    }
+
+    public function store(Request $request)
+    {
+        $validated = $request->validate([
+            'company_name' => 'required|string|max:255',
+            'contact_name' => 'required|string|max:255',
+            'contact_number' => 'required|string|max:255',
+            'company_address' => 'required|string|max:255',
+            'company_email' => 'required|email',
+            'description' => 'nullable|string|max:50',
+            'website' => 'required|url',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $validated['profile_picture'] = $request->file('profile_picture')->store('profile_picture', 'public');
+        }
+
+        $validated['user_id'] = Auth::id();
+        $profile = EmployerProfile::create($validated);
+
+        return redirect()->route('employers.index')->with('success', 'Profile created successfully.');
+    }
+
+    public function edit(EmployerProfile $employerProfile)
+    {
+        return Inertia::render('Employer/Edit', [
+            'profile' => $employerProfile
+        ]);
+    }
+    public function update(Request $request, EmployerProfile $employerProfile)
+    {
+        $validated = $request->validate([
+            'company_name' => 'nullable|string|max:255',
+            'contact_name' => 'nullable|string|max:255',
+            'contact_number' => 'nullable|string|max:255',
+            'company_address' => 'nullable|string|max:255',
+            'company_email' => 'nullable|email',
+            'description' => 'nullable|string|max:50',
+            'website' => 'nullable|url',
+            'profile_picture' => 'nullable|image|mimes:jpg,jpeg,png|max:2048',
+        ]);
+
+        if ($request->hasFile('profile_picture')) {
+            $file = $request->file('profile_picture');
+            $filename = time() . '_' . $file->getClientOriginalName();
+            $file->move(public_path('profile_picture'), $filename);
+            $validated['profile_picture'] = 'profile_picture/' . $filename;
+        }
+
+        $employerProfile->fill($validated)->save();
+
+        return redirect()->route('employers.index')->with('success', 'Profile updated successfully.');
+    }
+
+
+
+    public function destroy(EmployerProfile $employerProfile)
+    {
+        $employerProfile->delete();
+
+        return redirect()->route('employers.index')->with('success', 'Profile deleted successfully.');
     }
 
     public function applicants()
@@ -157,5 +223,17 @@ class EmployerController extends Controller
         $requirement->save();
 
         return redirect()->back()->with('message', 'Requirement rejected successfully.');
+    }
+
+    public function getInterns()
+    {
+        $internships = Internship::with(['applications' => function ($query) {
+            $query->where('status', 'accepted')
+                  ->with('studentProfile'); 
+        }])->get();
+
+        return Inertia::render('Employer/Interns', [
+            'internships' => $internships,
+        ]);
     }
 }

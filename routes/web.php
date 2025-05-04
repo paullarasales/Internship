@@ -53,10 +53,13 @@ Route::middleware(['auth', 'admin'])->group(function () {
 
 Route::middleware(['auth', 'employer'])->group(function () {
     Route::get('/employer/dashboard', [EmployerController::class, 'dashboard'])->name('employer.dashboard');
-    Route::get('/employer/profile', [EmployerController::class, 'showProfile'])->name('employer.profile.show');
-    Route::get('/employer/profile/edit', [EmployerController::class, 'editProfile'])->name('employer.profile.edit');
+    Route::get('/employers', [EmployerController::class, 'employerProfile'])->name('employers.index');
+    Route::get('/employers/create', [EmployerController::class, 'create'])->name('employers.create');
+    Route::get('/employers/{employerProfile}/edit', [EmployerController::class, 'edit'])->name('employers.edit');
+    Route::post('/employers/', [EmployerController::class, 'store'])->name('employers.store');
+    Route::put('/employers/{employerProfile}', [EmployerController::class, 'update'])->name('employers.update');
+    Route::delete('/employers/{employerProfile}', [EmployerController::class, 'destroy'])->name('employers.destroy');
     Route::get('/employer/notification', [EmployerController::class, 'notification'])->name('employer.notification');
-    Route::patch('/employer/profile', [EmployerController::class, 'updateProfile'])->name('employer.profile.update');
     Route::get('/employer/internships', [InternshipController::class, 'index'])->name('internships.index');
     Route::get('/employer/internships/create', [InternshipController::class, 'create'])->name('internships.create');
     Route::post('/employer/internships', [InternshipController::class, 'store'])->name('internships.store');
@@ -70,6 +73,7 @@ Route::middleware(['auth', 'employer'])->group(function () {
     Route::get('/employer/requirements/{id}/details', [EmployerController::class, 'viewRequirementDetails'])->name('employer.requirements.view');
     Route::post('/employer/requirement/{id}/approve', [EmployerController::class, 'approveRequirement']);
     Route::post('/employer/requirement/{id}/reject', [EmployerController::class, 'rejectRequirement']);
+    Route::get('/interns', [EmployerController::class, 'getInterns'])->name('interns');
 });
 
 Route::middleware(['auth', 'verified'])->group(function () {

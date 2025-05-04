@@ -11,6 +11,7 @@ class EmployerProfile extends Model
         'company_name',
         'contact_name',
         'contact_number',
+        'profile_picture',
         'company_address',
         'company_email',
         'description',

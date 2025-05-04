@@ -4,7 +4,10 @@ namespace App\Http\Controllers;
 
 use App\Models\Verification;
 use App\Models\User;
+use App\Models\Internship;
+use App\Models\EmployerProfile;
 use Illuminate\Http\Request;
+use App\Models\Application;
 use Illuminate\Support\Facades\Auth;
 use App\Notifications\VerificationStatusNotification;
 use Inertia\Inertia;
@@ -14,19 +17,70 @@ class AdminController extends Controller
 {
     public function dashboard()
     {
-        return Inertia::render('Admin/Dashboard');
+        $currentStudentCount = User::where('role', 'student')->count();
+        $previousStudent = User::where('role', 'student')->whereMonth('created_at', now()->subMonth()->month)->count();
+
+        $currentInternshipCount = Internship::count();
+        $previousInternshipCount = Internship::count()->whereMonth('created_at', now()->subMonth()->month)->count();
+
+        $employerCount = User::where('role', 'employer')->count();
+        $previousEmployerCount = User::where('role', 'employer')->whereMonth('created_at', now()->subMonth()->month)->count();
+
+        return Inertia::render('Admin/Dashboard', [
+            'studentStats' => [
+                'count' => $currentStudentCount,
+                'change' => $this->calculateChange($currentStudentCount, $previousStudent),
+            ],
+            'internshipStats' => [
+                'count' => $currentInternshipCount,
+                'change' => $this->calculateChange($currentInternshipCount, $previousInternshipCount),
+            ],
+            'employerStats' => [
+
+            ]
+        ]);
+    }
+
+    public function calculateChange($current, $previous)
+    {
+        if ($previous == 0) {
+            return $current > 0 ? 100 : 0;
+        }
+
+        return round((($current - $previous) / $previous) * 100);
     }
 
     public function monitorStudent()
     {
-        $students = User::whereHas('studentProfile')
+        $applications = Application::whereHas('studentProfile')
             ->with('studentProfile')
             ->get();
+
+        $students = $applications->groupBy('student_id')->map(function ($applications) {
+            $firstApplication = $applications->first();
+
+            $studentProfile = $firstApplication->studentProfile;
+
+            $accepted = $applications->contains(function ($application) {
+                return $application->status === 'accepted';
+            });
+
+            return [
+                'student_id' => $firstApplication->student_id,
+                'school_id' => $studentProfile->school_id,
+                'first_name' => $studentProfile->first_name,
+                'middle_name' => $studentProfile->middle_name,
+                'last_name' => $studentProfile->last_name,
+                'year_level' => $studentProfile->year_level,
+                'final_status' => $accepted ? 'accepted' : 'rejected',
+            ];
+        })->values();
 
         return Inertia::render('Admin/Monitor', [
             'students' => $students,
         ]);
     }
+
 
     public function studentList()
     {

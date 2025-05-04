@@ -39,6 +39,16 @@ export default function CompanyProfile({ profile }) {
                             <a href={profile.website}>{profile.website}</a>
                         </p>
 
+                        {profile.profile_picture && (
+                            <div>
+                                <strong>Profile Picture:</strong>
+                                <img
+                                    src={`/profiles/${profile.profile_picture}`}
+                                    alt="Profile"
+                                    className="w-32 h-32 object-cover rounded-full mt-2"
+                                />
+                            </div>
+                        )}
                         <Link
                             href={route("employer.profile.edit")}
                             className="btn btn-primary"

@@ -52,7 +52,7 @@ class NewApplicantNotification extends Notification
     public function toArray($notifiable)
     {
         return [
-            'message' => "{$this->studentName} has applied for '{$this->internshipTitle}'.",
+            'message' => "{$this->studentName} has applied for {$this->internshipTitle}.",
         ];
     }
 }

@@ -52,7 +52,7 @@ class ApplicationStatusNotification extends Notification
     public function toArray($notifiable)
     {
         $data = [
-            'message' => "Your application for '{$this->internshipTitle}' was {$this->status}.",
+            'message' => "Your application for {$this->internshipTitle} was {$this->status}.",
             'status' => $this->status,
             'title' => $this->internshipTitle,
         ];

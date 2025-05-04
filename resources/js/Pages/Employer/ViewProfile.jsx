@@ -37,9 +37,6 @@ export default function ViewProfile() {
                     <p>
                         <strong>Bio:</strong> {profile.bio}
                     </p>
-                    <p>
-                        <strong>Status:</strong> {profile.status}
-                    </p>
                 </div>
             </div>
         </EmployerLayout>

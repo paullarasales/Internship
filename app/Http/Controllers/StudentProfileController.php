@@ -15,21 +15,6 @@ use Inertia\Inertia;
 
 class StudentProfileController extends Controller
 {
-
-    public function application()
-    {
-        $student = Auth::user();
-
-        $applications = Application::with('internship')
-            ->where('student_id', $student->id)
-            ->latest()
-            ->get();
-
-        return Inertia::render('Applications', [
-            'applications' => $applications
-        ]);
-    }
-
     public function dashboard()
     {
         $internships = Internship::with('employerProfile.user')
@@ -47,23 +32,28 @@ class StudentProfileController extends Controller
                     'company_description' => optional($internship->employerProfile)->description,
                     'website' => optional($internship->employerProfile)->website,
                     'company_email' => optional($internship->employerProfile)->company_email,
-                    'company_address' => optional($internship->employerProfile)->company_address
+                    'company_address' => optional($internship->employerProfile)->company_address,
+                    'profile_picture' => optional($internship->employerProfile)->profile_picture,
                 ];
             });
             $user = auth()->user();
 
+        $user = auth()->user()->load('studentProfile');
         return Inertia::render('Dashboard', [
             'internships' => $internships,
             'isApproved' => $user->verification && $user->verification->status === 'approved',
+            'studentProfile' => $user->studentProfile,
         ]);
     }
 
     public function notification()
     {
         $notifications = auth()->user()->notifications;
+        $user = auth()->user()->load('studentProfile');
 
         return Inertia::render('Notification', [
             'notifications' => $notifications,
+            'studentProfile' => $user->studentProfile,
         ]);
     }
 
@@ -205,5 +195,21 @@ class StudentProfileController extends Controller
         }
 
         return redirect()->back()->with('success', 'Internship requirements submitted. Please wait for approval.');
+    }
+
+    public function application()
+    {
+        $student = Auth::user();
+
+        $applications = Application::with('internship')
+            ->where('student_id', $student->id)
+            ->latest()
+            ->get();
+
+        $user = auth()->user()->load('studentProfile');
+        return Inertia::render('Applications', [
+            'applications' => $applications,
+            'studentProfile' => $user->studentProfile,
+        ]);
     }
 }
